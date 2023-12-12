@@ -21,6 +21,21 @@ def main():
     print(" ")
     # Crea una instancia de la clase LinkExtractor y obtiene los enlaces
     
+    validador = input('''
+                      
+    (Desea retomar la descarga desde un video en especifico)
+    (--- Si )
+    (--- No )
+                      ''')
+    if(validador=='1'or validador=='Si'or validador=='si' or validador=='SI'or validador== 1):
+        start_index = int(input('''
+                      
+    (Introduzca el numero del video desde el cual desea retomar la descarga:
+                                
+                      '''))
+    else:
+        start_index=0
+        
     extractor = LinkExtractor()
     links = extractor.get_links(url)
 
@@ -28,7 +43,7 @@ def main():
     
     # Crea una instancia de VideoDownloader y descarga los videos de los enlaces
     downloader = VideoDownloader()
-    downloader.download_from_links(full_links, course_name, destination_folder)
+    downloader.download_from_links(links, course_name, destination_folder, start_index)
 
 def kill_edge_processes():
     try:
