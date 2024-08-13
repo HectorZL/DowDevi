@@ -1,6 +1,7 @@
 from playwright.sync_api import sync_playwright
 import random
-
+import asyncio
+from playwright.async_api import async_playwright
 
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -25,46 +26,49 @@ class LinkExtractor:
          'skillshare': 'li.session-item'
         }
     
-    def get_links(self, url_curso: str) -> list:
+    async def get_links(self, url_curso: str) -> list:
         found_links = []
         m3u8_links = []
         
         try:
-            with sync_playwright() as p:
-                browser = p.chromium.launch_persistent_context(user_data_dir=self.user_data, executable_path=self.chrome_path, headless=False, user_agent=user_agent)
-                page = browser.new_page()
-                
-                page.keyboard.press('Enter')  # Presiona la tecla Enter
+            async with async_playwright() as p:
+                browser = await p.chromium.launch_persistent_context(user_data_dir=self.user_data, executable_path=self.chrome_path, headless=False, user_agent=user_agent)
+                page = await browser.new_page()
+                        
+                await page.keyboard.press('Enter')  # Presiona la tecla Enter
                 print("__"*50)
                 print("")
                 print("Navegando a la página...")
-                page.goto(url_curso)
-                page.wait_for_timeout(10000)  # Espera 30 segundos
+                await page.goto(url_curso)
+                await page.wait_for_timeout(10000)  # Espera 30 segundos
                 print("")
                 print("Buscando enlaces en la página...")
                 print("")
                 print("__"*50)
                 
-                
+                # Establece el evento de solicitud solo una vez
+                page.on("request", lambda request: self.capture_netflow_event(request, m3u8_links))
+            
                 
                 # Determina el selector a utilizar dependiendo de la página
                 selector = self.get_selector(url_curso)
-                
+                                
                 # Selector para la página
-                link_elements = page.query_selector_all(selector)
+                link_elements = await page.query_selector_all(selector)
                 for link_element in link_elements:
                     if 'devtalles' in url_curso:
                         found_links.append(link_element.get_attribute('href'))
                     elif'skillshare' in url_curso:
                         # Hacer clic en el enlace y esperar a que se cargue el contenido
-                        link_element.click()
-                        page.wait_for_load_state("networkidle")
+                        await link_element.click()
+                        await page.wait_for_timeout(2000)  # Espera 2 segundos
+                
                         
-                        # Capturar el evento web que sucede en NetFlow
-                        page.on("request", lambda request: self.capture_netflow_event(request, m3u8_links))
+                        # Espera a que se capture el evento
+                        await page.wait_for_timeout(2000)  # Espera 1 segundo
                         
-                        
-                context.close()
+                        # Espera un segundo antes de continuar con el siguiente link
+                        await page.wait_for_timeout(1000)  # Espera 1 segundo  
         except Exception as e:
             print("Ocurrió un error al obtener los enlaces:", str(e))
         
@@ -83,3 +87,4 @@ class LinkExtractor:
          m3u8_link = request.url
          # Agregar el link a la lista de links M3U8
          m3u8_links.append(m3u8_link)
+        

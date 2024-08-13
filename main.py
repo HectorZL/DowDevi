@@ -1,19 +1,20 @@
 from link_extractor import LinkExtractor
 from video_downloader import VideoDownloader  
 import subprocess
-
+import asyncio
+from playwright.async_api import async_playwright
 
 base_url_dev = "https://cursos.devtalles.com" 
 base_url_skill = "https://www.skillshare.com"
 
-def main():
+async def main():
 
     kill_edge_processes()
 
     # Solicita al usuario que introduzca un enlace
     print(" ")
     #url = input("Por favor, introduzca el enlace del curso: ")
-    url='https://www.skillshare.com/es/classes/youtube-para-principiantes-como-empezar-y-hacer-crecer-tu-canal-de-youtube/1956780612/projects?via=member-home-EnrolledClassesLessonsSection'
+    url='https://www.skillshare.com/es/classes/inteligencia-artificial-para-principiantes-como-funciona-chatgpt/360552099'
     # Pide al usuario más información necesaria para la descarga
     print(" ")
     course_name = input("Por favor, introduzca el nombre del curso: ").strip()
@@ -39,18 +40,21 @@ def main():
         start_index=0
         
     extractor = LinkExtractor()
-    links, m3u8_links = extractor.get_links(url)
+    try:
+      links, m3u8_links = await extractor.get_links(url)
+    except Exception as e:
+        print(f"Ocurrió un error: {e}")
 
-     # Determina el base url dependiendo del link
-    if 'devtalles' in url:
-        base_url = base_url_dev
-    elif'skillshare' in url:
-        base_url = base_url_skill
-    else:
-        print("No se reconoció el link. Por favor, verifique el enlace.")
-        return
+    #  # Determina el base url dependiendo del link
+    # if 'devtalles' in url:
+    #     base_url = base_url_dev
+    # elif'skillshare' in url:
+    #     base_url = base_url_skill
+    # else:
+    #     print("No se reconoció el link. Por favor, verifique el enlace.")
+    #     return
     
-    full_links = [base_url + link for link in links]
+    # full_links = [base_url + link for link in links]
     
     # Crea una instancia de VideoDownloader y descarga los videos de los enlaces
     downloader = VideoDownloader()
@@ -65,4 +69,5 @@ def kill_edge_processes():
 
         
 if __name__ == "__main__":
-    main()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
