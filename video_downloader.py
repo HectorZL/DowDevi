@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 class VideoDownloader:
     def __init__(self):
-        self.user_data = r'C:\Users\jesuc\AppData\Local\Microsoft\Edge\User Data'
+        self.user_data = r'C:\Users\sky\AppData\Local\Microsoft\Edge\User Data'
         self.chrome_path = r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
         self.video_links = []
         self.aux = AuxMetodos()  # Instancia de la clase auxiliar
