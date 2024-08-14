@@ -17,29 +17,18 @@ class VideoDownloader:
         self.video_found_event = Event()
 
     def download_from_links(self, links, course_name, destination_folder, start_index):
-        course_path = Path(destination_folder) / course_name.lower().replace(':', '-')
-        course_path.mkdir(parents=True, exist_ok=True)
-
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            for link_index, link in enumerate(links[start_index:], start=start_index):
-                if link.endswith('.m3u8'):
-                    executor.submit(self.download_m3u8, link, course_path, link_index)
-                else:
-                    full_link = 'https://cursos.devtalles.com' + link
-                    executor.submit(self.download_video, full_link, course_path, link_index, len(links))
-                self.video_found_event.wait()  # Esperar a que el video actual se descargue completamente
-        course_url_prefix = 'https://cursos.devtalles.com'
-        course_path = Path(destination_folder) / course_name.lower().replace(':', '-')
-        course_path.mkdir(parents=True, exist_ok=True)
-
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            for link_index, link in enumerate(links[start_index:], start=start_index):
-                full_link = course_url_prefix + link
-                self.video_found = False
-                self.video_found_event.clear()
-
-                executor.submit(self.download_video, full_link, course_path, link_index, len(links))
-                self.video_found_event.wait()  # Esperar a que el video actual se descargue completamente
+     course_path = Path(destination_folder) / course_name.lower().replace(':', '-')
+     course_path.mkdir(parents=True, exist_ok=True)
+ 
+     with ThreadPoolExecutor(max_workers=2) as executor:
+         for link_index, link in enumerate(links[start_index:], start=start_index):
+             if "m3u8" in link:
+                 executor.submit(self.download_m3u8, link, course_path, link_index)
+             else:
+                 full_link = 'https://cursos.devtalles.com' + link
+                 executor.submit(self.download_video, full_link, course_path, link_index, len(links))
+             self.video_found_event.wait()  # Esperar a que el video actual se descargue completamente a que el video actual se descargue completamente
+        
     def download_m3u8(self, link, course_path, link_index):
         file_name_from_url = link.split("/")[-1]
         valid_file_name = self.aux.clean_file_name("-".join(file_name_from_url.split("-")[1:]))
