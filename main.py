@@ -41,22 +41,18 @@ async def main():
         
     extractor = LinkExtractor()
     try:
-      links, m3u8_links = await extractor.get_links(url)
+     links = await extractor.get_links(url)
     except Exception as e:
-        print(f"Ocurrió un error: {e}")
+     print(f"Ocurrió un error: {e}")
+     links = []  # Asigna un valor vacío a links en caso de error
 
-    #  # Determina el base url dependiendo del link
-    # if 'devtalles' in url:
-    #     base_url = base_url_dev
-    # elif'skillshare' in url:
-    #     base_url = base_url_skill
-    # else:
-    #     print("No se reconoció el link. Por favor, verifique el enlace.")
-    #     return
+    if 'devtalles' in url:
+        base_url = base_url_dev
+        full_links = [base_url + link for link in links]
+    else:
+        full_links = links  # Asigna el valor de links a full_links# Asigna el primer elemento de la tupla a full_links
     
-    # full_links = [base_url + link for link in links]
     
-    # Crea una instancia de VideoDownloader y descarga los videos de los enlaces
     downloader = VideoDownloader()
     downloader.download_from_links(full_links, course_name, destination_folder, start_index)
 

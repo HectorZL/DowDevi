@@ -17,6 +17,17 @@ class VideoDownloader:
         self.video_found_event = Event()
 
     def download_from_links(self, links, course_name, destination_folder, start_index):
+        course_path = Path(destination_folder) / course_name.lower().replace(':', '-')
+        course_path.mkdir(parents=True, exist_ok=True)
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            for link_index, link in enumerate(links[start_index:], start=start_index):
+                if link.endswith('.m3u8'):
+                    executor.submit(self.download_m3u8, link, course_path, link_index)
+                else:
+                    full_link = 'https://cursos.devtalles.com' + link
+                    executor.submit(self.download_video, full_link, course_path, link_index, len(links))
+                self.video_found_event.wait()  # Esperar a que el video actual se descargue completamente
         course_url_prefix = 'https://cursos.devtalles.com'
         course_path = Path(destination_folder) / course_name.lower().replace(':', '-')
         course_path.mkdir(parents=True, exist_ok=True)
@@ -29,7 +40,18 @@ class VideoDownloader:
 
                 executor.submit(self.download_video, full_link, course_path, link_index, len(links))
                 self.video_found_event.wait()  # Esperar a que el video actual se descargue completamente
+    def download_m3u8(self, link, course_path, link_index):
+        file_name_from_url = link.split("/")[-1]
+        valid_file_name = self.aux.clean_file_name("-".join(file_name_from_url.split("-")[1:]))
 
+        destination = course_path / f"{link_index} {valid_file_name}.mp4"
+
+        if os.path.exists(str(destination)):
+            print(f"El archivo {destination} ya existe. Saltando descarga.")
+            return
+
+        print("Enlace de video encontrado:", link)
+        download_with_ffmpeg(link, str(destination))
     def _handle_requests(self, page, request, course_path, link_index, course_url):
         if self.video_found:
             return

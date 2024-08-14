@@ -68,11 +68,14 @@ class LinkExtractor:
                         await page.wait_for_timeout(2000)  # Espera 1 segundo
                         
                         # Espera un segundo antes de continuar con el siguiente link
-                        await page.wait_for_timeout(1000)  # Espera 1 segundo  
+                        await page.wait_for_timeout(2000)  # Espera 1 segundo  
+
+            if'skillshare' in url_curso:
+                found_links = m3u8_links
         except Exception as e:
             print("Ocurrió un error al obtener los enlaces:", str(e))
         
-        return found_links, m3u8_links
+        return found_links
     
     def get_selector(self, url_curso: str) -> str:
         for plataforma, selector in self.selectors.items():
@@ -81,10 +84,10 @@ class LinkExtractor:
         return None
     
     def capture_netflow_event(self, request, m3u8_links):
-    # Verificar si el evento es un request a un archivo M3U8
-     if request.url.endswith(".m3u8"):
+     # Verificar si el evento es un request a un archivo M3U8
+     if request.url.endswith(".m3u8") and "manifest" in request.url:
          # Extraer el link del archivo M3U8 de la URL del evento
-         m3u8_link = request.url
+         m3u8_link = request.url + "?useVODOTFE=false"
          # Agregar el link a la lista de links M3U8
          m3u8_links.append(m3u8_link)
         
